@@ -8,8 +8,13 @@ conda activate llminference
 which python
 
 export HF_HOME="/export/data1/tdinh/huggingface"
+#export HF_HOME=/project/OML/tdinh/.cache/huggingface
 export CUDA_VISIBLE_DEVICES=0
 export PYTORCH_CUDA_ALLOC_CONF="max_split_size_mb:512"
+
+LLM_PATH="llava-hf/llava-1.5-7b-hf"
+#LLM_PATH="liuhaotian/llava-v1.6-mistral-7b"
+LLM_NAME="llava"
 
 # Loop through each JSON file in the current directory and its subdirectories
 for file in $(find exams_json/ -type f -name '*.json'); do
@@ -20,8 +25,8 @@ for file in $(find exams_json/ -type f -name '*.json'); do
 
   echo "Sending request to LLaVA ..."
   python -u send_exam_llava.py \
-    --llm-path "llava-hf/llava-1.5-7b-hf" \
-    --llm-name "llava" \
+    --llm-path ${LLM_PATH} \
+    --llm-name ${LLM_NAME} \
     --exam-json-path $file
 
   echo "---------------------------------------------------------"

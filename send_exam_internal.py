@@ -1,8 +1,7 @@
 import text_generation
 import json
-from json import JSONDecodeError
 import os
-from utils import prompt_prefix, load_json, dump_json, info_from_exam_path
+from utils import prompt_prefix, load_json, info_from_exam_path, write_text_file
 import argparse
 
 
@@ -14,39 +13,36 @@ def main():
     args = parser.parse_args()
 
     exam_name, lang = info_from_exam_path(args.exam_json_path)
-    prompt = prompt_prefix(lang=lang, scope='per_question')
+    prompt = prompt_prefix(lang=lang)
     exam = load_json(args.exam_json_path)
 
     out_dir = f"llm_out/{exam_name}"
     os.makedirs(out_dir, exist_ok=True)
-    out_path = f"{out_dir}/{exam_name}_{lang}_{args.llm_name}.json"
+    out_path = f"{out_dir}/{exam_name}_{lang}_{args.llm_name}.txt"
 
-    if os.path.isfile(out_path):
-        print("LLM output already available. Skip")
-    else:
-        client = text_generation.Client(args.server_url, timeout=5000)
-        print("Test request to see if server works: .........................")
-        print(client.generate("Are you awake?", max_new_tokens=17).generated_text)
-        print("Done testing")
+    # if os.path.isfile(out_path):
+    #     print("LLM output already available. Skip")
+    #     exit()
 
-        exam_out = []
-        count_invalid_json = 0
-        for question in exam['Questions']:
-            question_str = json.dumps(question)
-            out = client.generate(f"{prompt} \n{question_str}", max_new_tokens=512).generated_text
-            print(f"{prompt} \n{question_str}")
-            print("question_out", out)
-            try:
-                out_json = json.loads(out)
-            except JSONDecodeError:
-                out_json = out
-                count_invalid_json = count_invalid_json + 1
-            exam_out.append(out_json)
+    client = text_generation.Client(args.server_url, timeout=5000)
+    print("Test request to see if server works: .........................")
+    print(client.generate("Are you awake?", max_new_tokens=17).generated_text)
+    print("Done testing")
 
-        exam_out = {"Answers": exam_out}
-        dump_json(exam_out, out_path)
+    exam_out = ""
+    for question in exam['Questions']:
+        question_id = question.pop("Index")
+        question_str = json.dumps(question)
+        out = client.generate(f"{prompt} \n{question_str}", max_new_tokens=1024).generated_text
+        print(f"{prompt} \n{question_str}")
+        print("question_out", out)
 
-        print(f"count_invalid_json {count_invalid_json}")
+        exam_out += f"Answer to Question {question_id}\n"
+        exam_out += f"{out}\n"
+        exam_out += "\n\n\n\n\n****************************************************************************************\n"
+        exam_out += "****************************************************************************************\n\n\n\n\n"
+
+    write_text_file(exam_out, out_path)
 
 
 if __name__ == "__main__":

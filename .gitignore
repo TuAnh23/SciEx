@@ -3,6 +3,7 @@ exams_json/*
 exams_pdfs/*
 exams_tex/*
 exams_text/*
+artifacts/*
 
 # Ignore human grades
 exams_scores/*

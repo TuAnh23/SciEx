@@ -1,17 +1,8 @@
 from openai import OpenAI
 import json
 import os
-from utils import prompt_prefix, load_json, dump_json, info_from_exam_path, collect_figures
+from utils import prompt_prefix, load_json, write_text_file, info_from_exam_path, collect_figures, encode_image, process_images
 import argparse
-import base64
-from json import JSONDecodeError
-import requests
-
-
-# Function to encode the image
-def encode_image(image_path):
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
 
 
 def main():
@@ -23,26 +14,34 @@ def main():
     args = parser.parse_args()
 
     if args.server_url != "openai":
-        client = OpenAI(base_url=args.server_url)
+        client = OpenAI(base_url=args.server_url, timeout=1800)
     else:
-        client = OpenAI()
+        client = OpenAI(timeout=1800)
 
     exam_name, lang = info_from_exam_path(args.exam_json_path)
-    prompt = prompt_prefix(lang, scope='per_question')
+    out_dir = f"llm_out/{exam_name}"
+    out_path = f"{out_dir}/{exam_name}_{lang}_{args.llm_name}.txt"
+
+    if os.path.isfile(out_path):
+        print("LLM output already available. Skip")
+        exit()
+
+    os.makedirs(out_dir, exist_ok=True)
+
+    prompt = prompt_prefix(lang)
     exam = load_json(f"exams_json/{exam_name}/{exam_name}_{lang}.json")
 
-    exam_out = []
-    count_invalid_json = 0
+    exam_out = ''
     for question in exam['Questions']:
+        question_id = question.pop("Index")
         if "vision" in args.llm_name_full:
-            image_paths = collect_figures(question)
-            image_full_paths = [f"exams_json/{exam_name}/{x}" for x in image_paths]
+            images = process_images(exam_name, question)
             images_messages = [
                 {
                     "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{encode_image(image_path)}"}
+                    "image_url": {"url": f"data:image/jpeg;base64,{encode_image(pil_image=image)}"}
                 }
-                for image_path in image_full_paths
+                for image in images
             ]
             text_message = {
                 "type": "text",
@@ -52,7 +51,6 @@ def main():
 
             response = client.chat.completions.create(
                 model=args.llm_name_full,
-                response_format={"type": "json_object"},
                 seed=0,
                 messages=[
                     {"role": "system", "content": prompt},
@@ -62,7 +60,6 @@ def main():
         else:
             response = client.chat.completions.create(
                 model=args.llm_name_full,
-                response_format={"type": "json_object"},
                 seed=0,
                 messages=[
                     {"role": "system", "content": prompt},
@@ -70,19 +67,13 @@ def main():
                 ]
             )
         out = response.choices[0].message.content
-        try:
-            out_json = json.loads(out)
-        except JSONDecodeError:
-            out_json = out
-            count_invalid_json = count_invalid_json + 1
-        exam_out.append(out_json)
+        exam_out += f"Answer to Question {question_id}\n"
+        exam_out += f"{out}\n"
+        exam_out += \
+            "\n\n\n\n\n****************************************************************************************\n"
+        exam_out += "****************************************************************************************\n\n\n\n\n"
 
-    exam_out = {"Answers": exam_out}
-
-    out_dir = f"llm_out/{exam_name}"
-    os.makedirs(out_dir, exist_ok=True)
-
-    dump_json(exam_out, f"{out_dir}/{exam_name}_{lang}_{args.llm_name}.json")
+    write_text_file(exam_out, out_path)
 
 
 if __name__ == "__main__":

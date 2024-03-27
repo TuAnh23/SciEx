@@ -6,7 +6,7 @@ source /home/tdinh/.bashrc
 conda activate llminference
 which python
 
-LLM_NAME=mixtral
+LLM_NAME=mistral
 SERVER_URL="http://i13hpc65:8054"
 
 # Loop through each JSON file in the current directory and its subdirectories
