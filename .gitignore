@@ -1,0 +1,27 @@
+# Ignore data files
+exams_json/*
+exams_pdfs/*
+exams_tex/*
+exams_text/*
+
+# Ignore human grades
+exams_scores/*
+
+# Ignore LLM output
+llm_out/*
+
+# Ignore manual parsing
+*to_json.py
+reformat_hci_exams.py
+
+# Ignore notes
+note.txt
+Test.ipynb
+
+# Ignore python stuff
+.idea/*
+__pycache__/*
+.ipynb_checkpoints/
+
+# Ignore macOS stuff
+.DS_Store
