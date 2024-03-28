@@ -4,9 +4,10 @@ set -eu  # Crash if variable used without being set
 # Setting environment
 source /home/tdinh/.bashrc
 conda activate llminference
+. .venv/bin/activate
 which python
 
-LLM_NAME=mistral
+LLM_NAME=phi2
 SERVER_URL="http://i13hpc65:8054"
 
 # Loop through each JSON file in the current directory and its subdirectories

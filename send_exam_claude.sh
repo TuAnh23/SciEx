@@ -4,18 +4,10 @@ set -eu  # Crash if variable used without being set
 # Setting environment
 source /home/tdinh/.bashrc
 conda activate llminference
-. .venv/bin/activate
-#conda activate /home/sparta/anaconda3/envs/llava
 which python
 
-export HF_HOME="/export/data1/tdinh/huggingface"
-#export HF_HOME=/project/OML/tdinh/.cache/huggingface
-export CUDA_VISIBLE_DEVICES=2
-export PYTORCH_CUDA_ALLOC_CONF="max_split_size_mb:512"
-
-LLM_PATH="llava-hf/llava-1.5-7b-hf"
-#LLM_PATH="liuhaotian/llava-v1.6-mistral-7b"
-LLM_NAME="llava"
+LLM_NAME="claude"
+LLM_NAME_FULL="claude-3-opus-20240229"
 
 # Loop through each JSON file in the current directory and its subdirectories
 for file in $(find exams_json/ -type f -name '*.json'); do
@@ -24,11 +16,11 @@ for file in $(find exams_json/ -type f -name '*.json'); do
   python -u validate_exam_json.py \
     --json_path ${file}
 
-  echo "Sending request to LLaVA ..."
-  python -u send_exam_llava.py \
-    --llm-path ${LLM_PATH} \
+  echo "Sending request to claude ..."
+  python -u send_exam_claude.py \
+    --llm-name-full ${LLM_NAME_FULL} \
     --llm-name ${LLM_NAME} \
-    --exam-json-path $file
+    --exam-json-path ${file}
 
   echo "---------------------------------------------------------"
 done

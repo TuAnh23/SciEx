@@ -33,7 +33,7 @@ def main():
     for question in exam['Questions']:
         question_id = question.pop("Index")
         question_str = json.dumps(question)
-        out = client.generate(f"{prompt} \n{question_str}", max_new_tokens=1024).generated_text
+        out = client.generate(f"{prompt} \n{question_str}", max_new_tokens=952).generated_text
         print(f"{prompt} \n{question_str}")
         print("question_out", out)
 

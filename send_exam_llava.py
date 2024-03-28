@@ -34,18 +34,20 @@ def main():
     out_dir = f"llm_out/{exam_name}"
     out_path = f"{out_dir}/{exam_name}_{lang}_{args.llm_name}.txt"
 
-    # if os.path.isfile(out_path):
-    #     print("LLM output already available. Skip")
-    #     exit()
+    if os.path.isfile(out_path):
+        print("LLM output already available. Skip")
+        exit()
 
     os.makedirs(out_dir, exist_ok=True)
 
     logging.info("Loading model...")
     model = LlavaForConditionalGeneration.from_pretrained(args.llm_path)
+    # model.to('cuda')
     logging.info("Loading model completed.")
 
     logging.info("Loading processor...")
     processor = AutoProcessor.from_pretrained(args.llm_path)
+    # processor.to('cuda')
     logging.info("Loading processor completed.")
 
     exam = load_json(args.exam_json_path)
