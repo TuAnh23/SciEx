@@ -4,12 +4,14 @@ exams_pdfs/*
 exams_tex/*
 exams_text/*
 artifacts/*
+human_feedback_template/*
 
 # Ignore human grades
 exams_scores/*
 
 # Ignore LLM output
 llm_out/*
+llm_out_filtered/*
 
 # Ignore manual parsing
 *to_json.py
