@@ -18,9 +18,9 @@ def main():
     out_dir = f"llm_out/{exam_name}"
     out_path = f"{out_dir}/{exam_name}_{lang}_{args.llm_name}.txt"
 
-    # if os.path.isfile(out_path):
-    #     print("LLM output already available. Skip")
-    #     exit()
+    if os.path.isfile(out_path):
+        print("LLM output already available. Skip")
+        exit()
 
     os.makedirs(out_dir, exist_ok=True)
 

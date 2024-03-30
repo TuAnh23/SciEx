@@ -16,7 +16,7 @@ llm_out/*
 reformat_hci_exams.py
 
 # Ignore notes
-note.txt
+note.md
 Test.ipynb
 
 # Ignore python stuff

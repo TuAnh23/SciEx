@@ -34,6 +34,7 @@ def main():
     exam_out = ''
     for question in exam['Questions']:
         question_id = question.pop("Index")
+        print(question)
         if "vision" in args.llm_name_full:
             images = process_images(exam_name, question)
             images_messages = [
@@ -67,6 +68,7 @@ def main():
                 ]
             )
         out = response.choices[0].message.content
+        print(f'**** Answer: {out}')
         exam_out += f"Answer to Question {question_id}\n"
         exam_out += f"{out}\n"
         exam_out += \

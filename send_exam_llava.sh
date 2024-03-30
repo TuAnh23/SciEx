@@ -3,18 +3,19 @@ set -eu  # Crash if variable used without being set
 
 # Setting environment
 source /home/tdinh/.bashrc
-conda activate llminference
-. .venv/bin/activate
-#conda activate /home/sparta/anaconda3/envs/llava
+#conda activate llminference
+#. .venv/bin/activate
+conda activate py39
+. .llava/bin/activate
 which python
 
-export HF_HOME="/export/data1/tdinh/huggingface"
-#export HF_HOME=/project/OML/tdinh/.cache/huggingface
-export CUDA_VISIBLE_DEVICES=2
+#export HF_HOME="/export/data1/tdinh/huggingface"
+export HF_HOME=/project/OML/tdinh/.cache/huggingface
+export CUDA_VISIBLE_DEVICES=4
 export PYTORCH_CUDA_ALLOC_CONF="max_split_size_mb:512"
 
-LLM_PATH="llava-hf/llava-1.5-7b-hf"
-#LLM_PATH="liuhaotian/llava-v1.6-mistral-7b"
+#LLM_PATH="llava-hf/llava-1.5-7b-hf"
+LLM_PATH="llava-hf/llava-v1.6-mistral-7b-hf"
 LLM_NAME="llava"
 
 # Loop through each JSON file in the current directory and its subdirectories
