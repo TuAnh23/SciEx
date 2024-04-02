@@ -22,7 +22,7 @@ def llava(model, processor, prompt, image=None):
     inputs = inputs.to('cuda')
 
     # Generate
-    generate_ids = model.generate(**inputs, max_length=2048)
+    generate_ids = model.generate(**inputs, max_length=4096)
     text_from_lava = (
         processor.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
     )

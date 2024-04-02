@@ -16,6 +16,7 @@ llm_out_filtered/*
 # Ignore manual parsing
 *to_json.py
 reformat_hci_exams.py
+reformat_ml4sc_exams.py
 
 # Ignore notes
 note.md

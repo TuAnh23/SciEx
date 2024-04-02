@@ -7,7 +7,7 @@ conda activate llminference
 . .venv/bin/activate
 which python
 
-LLM_NAME=phi2
+LLM_NAME=mistral
 SERVER_URL="http://i13hpc65:8054"
 
 # Loop through each JSON file in the current directory and its subdirectories

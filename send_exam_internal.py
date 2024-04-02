@@ -20,9 +20,9 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     out_path = f"{out_dir}/{exam_name}_{lang}_{args.llm_name}.txt"
 
-    # if os.path.isfile(out_path):
-    #     print("LLM output already available. Skip")
-    #     exit()
+    if os.path.isfile(out_path):
+        print("LLM output already available. Skip")
+        exit()
 
     client = text_generation.Client(args.server_url, timeout=5000)
     print("Test request to see if server works: .........................")

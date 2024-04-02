@@ -1,5 +1,13 @@
 #!/bin/bash
 
+rm -rf human_feedback_template
+# Loop through each JSON exam file
+for file in $(find exams_json/ -type f -name '*.json'); do
+  python create_info_template.py --json_path ${file}
+  python create_grading_template.py --json_path ${file}
+  python prepare_llm_output.py --json_path ${file}
+done
+
 parent_directory="llm_out_filtered"
 
 # Loop through each subdirectory in the parent directory

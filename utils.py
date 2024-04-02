@@ -6,6 +6,14 @@ import base64
 import io
 
 
+def map_llm_to_index(llm_name):
+    llm_list = ['llava', 'mistral', 'mixtral', 'qwen', 'claude', 'gpt35', 'gpt4v']
+    if llm_name not in llm_list:
+        raise RuntimeError(f"LLM {llm_name} not in list")
+    d = {llm: f"llm{i}" for i, llm in enumerate (llm_list)}
+    return d[llm_name]
+
+
 def prompt_prefix(lang, stack_figures=False):
     """
     :param lang: 'en' or 'de'
