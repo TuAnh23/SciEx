@@ -43,7 +43,7 @@ def main():
 
                     info_json = f"human_feedback_streamlit/{exam_name}/additional_info.json"
 
-                    input_key = 0
+                    input_key = int(selected_llm[-1])*1000 if selected_llm.startswith('llm') else 9000
                     for question in exam_json['Questions']:
                         st.header(f"Question {question['Index']}:")
                         if 'Description' in question:
@@ -209,6 +209,7 @@ def prefil_per_exam(key, json_file):
 
 def update_per_question(key, value, question_id, json_file):
     if value:
+        print(key, value, question_id, json_file)
         out = load_json(json_file)
         find_question(out['Questions'], question_id)[key] = value
         dump_json(out, json_file)
