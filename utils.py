@@ -6,12 +6,32 @@ import base64
 import io
 
 
+LLM_LIST = ['llava', 'mistral', 'mixtral', 'qwen', 'claude', 'gpt35', 'gpt4v']
+EXAM_LIST = [
+    {"exam_name": "nlp_march_2023", "lang": ["en", "de"]},
+    {"exam_name": "dl4cv2_feb_2024", "lang": ["en", "de"]},
+    {"exam_name": "dbs_exam_ipd-boehm_2022-ws", "lang": ["de"]},
+    {"exam_name": "dbs_exam_ipd-boehm_2023", "lang": ["de"]},
+    {"exam_name": "HCI_SS23", "lang": ["en", "de"]},
+    {"exam_name": "exam_cg_march_2024", "lang": ["de"]},
+    {"exam_name": "ml_4_natural_science", "lang": ["en", "de"]},
+    {"exam_name": "TGI2324", "lang": ["de"]},
+    {"exam_name": "nlp_march_2024", "lang": ["en", "de"]},
+    {"exam_name": "AI2-SoSe-23", "lang": ["en", "de"]},
+    {"exam_name": "DLNN-WS2223", "lang": ["en", "de"]},
+    {"exam_name": "algo_ws2324", "lang": ["de"]},
+]
+
+
 def map_llm_to_index(llm_name):
-    llm_list = ['llava', 'mistral', 'mixtral', 'qwen', 'claude', 'gpt35', 'gpt4v']
-    if llm_name not in llm_list:
+    if llm_name not in LLM_LIST:
         raise RuntimeError(f"LLM {llm_name} not in list")
-    d = {llm: f"llm{i}" for i, llm in enumerate (llm_list)}
+    d = {llm: f"llm{i}" for i, llm in enumerate(LLM_LIST)}
     return d[llm_name]
+
+
+def map_index_to_llm(index):
+    return LLM_LIST[index]
 
 
 def prompt_prefix(lang, stack_figures=False):

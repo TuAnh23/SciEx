@@ -5,6 +5,7 @@ exams_tex/*
 exams_text/*
 artifacts/*
 human_feedback_template/*
+human_feedback/*
 
 # Ignore human grades
 exams_scores/*
@@ -17,6 +18,8 @@ llm_out_filtered/*
 *to_json.py
 reformat_hci_exams.py
 reformat_ml4sc_exams.py
+sum_grade_ai2.py
+correct_float_format.py
 
 # Ignore notes
 note.md
