@@ -4,6 +4,7 @@ from PIL import Image, ImageDraw, ImageFont
 import fitz  # PyMuPDF, imported as fitz for backward compatibility reasons
 import base64
 import io
+import re
 
 
 LLM_LIST = ['llava', 'mistral', 'mixtral', 'qwen', 'claude', 'gpt35', 'gpt4v']
@@ -32,6 +33,45 @@ def map_llm_to_index(llm_name):
 
 def map_index_to_llm(index):
     return LLM_LIST[index]
+
+
+def grading_prompt_prefix(lang, max_score, stack_figures=False):
+    """
+        :param lang: 'en' or 'de'
+        :return: prompt prefix as a string
+        """
+    if stack_figures:
+        if lang == 'en':
+            extra_message = "Note that the single input figure could contain multiple figures stacked vertically. "
+        elif lang == 'de':
+            extra_message = "Beachten Sie, dass die einzelne Eingabe Figur mehrere vertikal gestapelte Figuren " \
+                            "enthalten kann. "
+        else:
+            raise RuntimeError(f"No prompt for lang {lang}")
+    else:
+        extra_message = ""
+    if lang == 'en':
+        prompt = f"You are a university professor. Please grade the following exam question. The exam question and answer are provided in the format:\n" \
+                 f"[question] <exam_question> [/question] \n" \
+                 f"[answer] <answer> [/answer] \n" \
+                 f"The question is provided in JSON format, but the answer can be freeform text. The provided figures in the question (if any) each contains its path at the bottom, which matches the path provided in the JSON. {extra_message}The answer is text-only. If the question asks to draw on the figure, then the answer should contain text description on how the drawing should be." \
+                 f"Please provide the grade between [0, {max_score}]. Please provide the reasoning for your grade. Please provide your output in the format: \n" \
+                 f"[reason] <reasoning> [/reason] \n" \
+                 f"[grade] <grade> [/grade] \n" \
+                 f"Here is your input: \n"
+    elif lang == 'de':
+        prompt = f"Sie sind Universitätsprofessor. Bitte bewerten Sie die folgende Prüfungsfrage. Die Prüfungsfrage und die Antwort werden im Format bereitgestellt:\n" \
+                  f"[question] <Prüfungsfrage> [/question] \n" \
+                  f"[answer] <Antwort> [/answer] \n" \
+                  f"Die Frage wird im JSON-Format bereitgestellt, die Antwort kann jedoch Freiformtext sein. Die bereitgestellten Abbildungen in der Frage (falls vorhanden) enthalten jeweils unten ihren Pfad, der mit dem im JSON bereitgestellten Pfad übereinstimmt. {extra_message}Die Antwort ist nur Text. Wenn es sich bei der Frage darum handelt, auf der Abbildung zu zeichnen, sollte die Antwort eine Textbeschreibung darüber enthalten, wie die Zeichnung aussehen soll." \
+                  f"Bitte geben Sie die Note zwischen [0, {max_score}] an. Bitte begründen Sie Ihre Note. Bitte geben Sie Ihre Ausgabe im Format an: \n" \
+                  f"[reason] <Grundsatz> [/reason] \n" \
+                  f"[grade] <Note> [/grade] \n" \
+                  f"Hier ist Ihre Eingabe: \n"
+    else:
+        raise RuntimeError(f"No prompt for lang {lang}")
+
+    return prompt
 
 
 def prompt_prefix(lang, stack_figures=False):
@@ -203,3 +243,46 @@ def process_images(exam_name, question):
     image_titles = [f"Figure: {x}" for x in image_paths_flatten]
     images = [add_title(img, title) for img, title in zip(images, image_titles)]
     return images
+
+
+def extract_answer(question_id, answer):
+    start_marker = f"Answer to Question {question_id}"
+    end_marker = "****************************************************************************************\n" \
+                 "****************************************************************************************"
+
+    start_index = answer.find(start_marker)
+    if start_index == -1:
+        raise RuntimeError(f"Problem with extracting answer for question {question_id}")
+
+    end_index = answer.find(end_marker, start_index)
+    if end_index == -1:
+        raise RuntimeError(f"Problem with extracting answer for question {question_id}")
+
+    return answer[start_index + len(start_marker):end_index]
+
+
+def parse_grade(llm_out, max_score):
+    grade_regex = r"\[grade\]\s*(\d+(?:[.,]\d+)?)\s*\[/grade\]"
+    matches = re.findall(grade_regex, llm_out)
+    grade = parse_matched_float(matches, max_score)
+    if grade is not None:
+        return grade
+
+    grade_regex = r"(\d+(?:[.,]\d+)?)"
+    matches = re.findall(grade_regex, llm_out)
+    grade = parse_matched_float(matches, max_score)
+    return grade
+
+
+def parse_matched_float(matches, max_score):
+    for match in reversed(matches):
+        grade_str = match
+        # Replace comma with dot if present
+        grade_str = grade_str.replace(',', '.')
+        try:
+            grade = float(grade_str.strip())
+            if grade >= 0 and grade <= max_score:  # Assuming max_score is defined elsewhere
+                return grade
+        except RuntimeError:
+            continue
+    return None
