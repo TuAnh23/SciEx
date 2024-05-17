@@ -110,7 +110,8 @@ class HFTextGenClient(LLMClient):
         self.client = text_generation.Client(self.server_url, timeout=5000)
 
     def send_request(self, prompt, input_body, images, **kwargs):
-        return self.client.generate(f"{prompt} \n{input_body}", max_new_tokens=952).generated_text
+        max_new_tokens = kwargs['max_tokens'] if 'max_tokens' in kwargs else 952
+        return self.client.generate(f"{prompt} \n{input_body}", max_new_tokens=max_new_tokens).generated_text
 
 
 class HFLlava(LLMClient):

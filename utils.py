@@ -13,13 +13,13 @@ EXAM_LIST = [
     {"exam_name": "dl4cv2_feb_2024", "lang": ["en", "de"]},
     {"exam_name": "dbs_exam_ipd-boehm_2022-ws", "lang": ["de"]},
     {"exam_name": "dbs_exam_ipd-boehm_2023", "lang": ["de"]},
-    {"exam_name": "HCI_SS23", "lang": ["en", "de"]},
+    {"exam_name": "HCI_SS23", "lang": ["en"]},  # de
     {"exam_name": "exam_cg_march_2024", "lang": ["de"]},
     {"exam_name": "ml_4_natural_science", "lang": ["en", "de"]},
     {"exam_name": "TGI2324", "lang": ["de"]},
-    {"exam_name": "nlp_march_2024", "lang": ["en", "de"]},
+    {"exam_name": "nlp_march_2024", "lang": ["en"]},  # de
     {"exam_name": "AI2-SoSe-23", "lang": ["en", "de"]},
-    {"exam_name": "DLNN-WS2223", "lang": ["en", "de"]},
+    {"exam_name": "DLNN-WS2223", "lang": ["en"]},  # de
     {"exam_name": "algo_ws2324", "lang": ["de"]},
 ]
 
@@ -35,7 +35,7 @@ def map_index_to_llm(index):
     return LLM_LIST[index]
 
 
-def grading_prompt_prefix(lang, max_score, stack_figures=False):
+def grading_prompt_prefix(lang, shots=[], stack_figures=False):
     """
         :param lang: 'en' or 'de'
         :return: prompt prefix as a string
@@ -50,23 +50,57 @@ def grading_prompt_prefix(lang, max_score, stack_figures=False):
             raise RuntimeError(f"No prompt for lang {lang}")
     else:
         extra_message = ""
+
+    if len(shots) == 0:
+        shot_message = ""
+    else:
+        shot_message_en = "Below you are provided with example on how to perform the grading:\n"
+        shot_message_de = "Nachfolgend finden Sie ein Beispiel für die Durchführung der Benotung:\n"
+        input_w_en = "Input"
+        input_w_de = "Eingabe"
+        output_w_en = "Output"
+        output_w_de = "Ausgabe"
+
+        if lang == 'en':
+            shot_message = shot_message_en
+            input_w = input_w_en
+            output_w = output_w_en
+        elif lang == 'de':
+            shot_message = shot_message_de
+            input_w = input_w_de
+            output_w = output_w_de
+        else:
+            raise RuntimeError(f"No prompt for lang {lang}")
+
+        for shot in shots:
+            shot_message = shot_message + f"{input_w}:\n" \
+                                          f"[question]\n{shot['Question']}\n[/question] \n" \
+                                          f"[answer]\n{shot['Answer']}\n[/answer] \n" \
+                                          f"[max_score] {shot['MaxScore']} [/max_score] \n" \
+                                          f"{output_w}:\n" \
+                                          f"[grade] {shot['GoldGrade']} [/grade]\n\n"
+
     if lang == 'en':
-        prompt = f"You are a university professor. Please grade the following exam question. The exam question and answer are provided in the format:\n" \
+        prompt = f"You are a university professor. Please grade the following exam question. The exam question, answer and the maximum possible score are provided in the format:\n" \
                  f"[question] <exam_question> [/question] \n" \
                  f"[answer] <answer> [/answer] \n" \
+                 f"[max_score] <max_score> [/max_score] \n" \
                  f"The question is provided in JSON format, but the answer can be freeform text. The provided figures in the question (if any) each contains its path at the bottom, which matches the path provided in the JSON. {extra_message}The answer is text-only. If the question asks to draw on the figure, then the answer should contain text description on how the drawing should be." \
-                 f"Please provide the grade between [0, {max_score}]. Please provide the reasoning for your grade. Please provide your output in the format: \n" \
+                 f"Please provide the grade between [0, <max_score>]. Please provide the reasoning for your grade. Please provide your output in the format: \n" \
                  f"[reason] <reasoning> [/reason] \n" \
                  f"[grade] <grade> [/grade] \n" \
+                 f"{shot_message}" \
                  f"Here is your input: \n"
     elif lang == 'de':
-        prompt = f"Sie sind Universitätsprofessor. Bitte bewerten Sie die folgende Prüfungsfrage. Die Prüfungsfrage und die Antwort werden im Format bereitgestellt:\n" \
+        prompt = f"Sie sind Universitätsprofessor. Bitte bewerten Sie die folgende Prüfungsfrage. Die Prüfungsfrage, die Antwort und die maximal mögliche Punktzahl werden im Format bereitgestellt:\n" \
                   f"[question] <Prüfungsfrage> [/question] \n" \
                   f"[answer] <Antwort> [/answer] \n" \
+                  f"[max_score] <maxPunkt> [/max_score] \n" \
                   f"Die Frage wird im JSON-Format bereitgestellt, die Antwort kann jedoch Freiformtext sein. Die bereitgestellten Abbildungen in der Frage (falls vorhanden) enthalten jeweils unten ihren Pfad, der mit dem im JSON bereitgestellten Pfad übereinstimmt. {extra_message}Die Antwort ist nur Text. Wenn es sich bei der Frage darum handelt, auf der Abbildung zu zeichnen, sollte die Antwort eine Textbeschreibung darüber enthalten, wie die Zeichnung aussehen soll." \
-                  f"Bitte geben Sie die Note zwischen [0, {max_score}] an. Bitte begründen Sie Ihre Note. Bitte geben Sie Ihre Ausgabe im Format an: \n" \
+                  f"Bitte geben Sie die Note zwischen [0, <maxPunkt>] an. Bitte begründen Sie Ihre Note. Bitte geben Sie Ihre Ausgabe im Format an: \n" \
                   f"[reason] <Grundsatz> [/reason] \n" \
                   f"[grade] <Note> [/grade] \n" \
+                  f"{shot_message}" \
                   f"Hier ist Ihre Eingabe: \n"
     else:
         raise RuntimeError(f"No prompt for lang {lang}")
@@ -286,3 +320,24 @@ def parse_matched_float(matches, max_score):
         except RuntimeError:
             continue
     return None
+
+
+def load_text_file(file_path, single_str=True):
+    """
+    Load the whole text file to a single string or to a list of strings, each represents a line
+    """
+    if single_str:
+        with open(file_path, "r") as file:
+            string = file.read()
+        return string
+    else:
+        with open(file_path, 'r') as f:
+            lines = f.readlines()
+            lines = [line.strip() for line in lines]
+        return lines
+
+
+def remove_key(d, key):
+    new_d = d.copy()
+    new_d.pop(key)
+    return new_d

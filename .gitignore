@@ -6,6 +6,7 @@ exams_text/*
 artifacts/*
 human_feedback_template/*
 human_feedback/*
+llm_grade/*
 
 # Ignore human grades
 exams_scores/*
