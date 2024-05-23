@@ -21,6 +21,7 @@ reformat_hci_exams.py
 reformat_ml4sc_exams.py
 sum_grade_ai2.py
 correct_float_format.py
+fix_name.py
 
 # Ignore notes
 note.md

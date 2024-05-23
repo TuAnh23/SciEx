@@ -72,7 +72,7 @@ def main():
             for x in shot_llms
         ] if args.nr_shots != 0 else None
         shot_human_grades = [
-            load_json(f"human_feedback/{shot_exam_name}/grades/{shot_exam_name}_{lang}_{map_llm_to_index(shot_llm)}_grade.json")
+            load_human_grades(shot_exam_name, lang, shot_llm)
             for shot_llm in shot_llms
         ] if args.nr_shots != 0 else None
 
@@ -157,6 +157,20 @@ def main():
             },
             file_path=grade_out_path
         )
+
+
+def load_human_grades(exam_name, lang, llm):
+    path = f"human_feedback/{exam_name}/grades/{exam_name}_{lang}_{map_llm_to_index(llm)}_grade.json"
+    if os.path.isfile(path):
+        data = load_json(path)
+        for q in data['Questions']:
+            if q['Points'] is None:
+                print(f"Human grade not filled at {exam_name}, {lang}, {llm}")
+                exit()
+    else:
+        print(f"Human grade file not available at {exam_name}, {lang}, {llm}")
+        exit()
+    return data
 
 
 if __name__ == "__main__":

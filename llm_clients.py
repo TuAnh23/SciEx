@@ -6,6 +6,7 @@ import text_generation
 import logging
 from transformers import LlavaNextProcessor, LlavaNextForConditionalGeneration
 from PIL import Image
+import time
 
 
 class LLMClient(ABC):
@@ -24,11 +25,12 @@ class OpenAIClient(LLMClient):
         self.model = model
         self.seed = seed
         if self.server_url != "openai":
-            self.client = OpenAI(base_url=self.server_url, timeout=1800)
+            self.client = OpenAI(base_url=self.server_url, timeout=900)
         else:
-            self.client = OpenAI(timeout=1800)
+            self.client = OpenAI(timeout=900)
 
     def send_request(self, prompt, input_body, images, **kwargs):
+        time.sleep(30)
         if "vision" in self.model:
             images_messages = [
                 {
