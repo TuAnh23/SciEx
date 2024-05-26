@@ -30,7 +30,7 @@ class OpenAIClient(LLMClient):
             self.client = OpenAI(timeout=900)
 
     def send_request(self, prompt, input_body, images, **kwargs):
-        time.sleep(30)
+        time.sleep(1)
         if "vision" in self.model:
             images_messages = [
                 {

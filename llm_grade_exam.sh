@@ -13,6 +13,7 @@ LLM_NAME_FULL=$3
 SERVER_URL=$4
 NR_SHOT=$5
 SHOT_TYPE=$6
+REF=$7
 
 
 if [ -z ${SERVER_TYPE} ]; then
@@ -46,7 +47,7 @@ for file in $(find exams_json/ -type f -name '*.json'); do
     --exam-json-path ${file} \
     --nr-shots ${NR_SHOT} \
     --shot-type ${SHOT_TYPE} \
-    --with-ref "no"
+    --with-ref ${REF}
 
   echo "---------------------------------------------------------"
 done

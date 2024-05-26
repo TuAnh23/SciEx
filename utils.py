@@ -35,7 +35,7 @@ def map_index_to_llm(index):
     return LLM_LIST[index]
 
 
-def grading_prompt_prefix(lang, shots=[], stack_figures=False):
+def grading_prompt_prefix(lang, shots=[], with_ref=False, stack_figures=False):
     """
         :param lang: 'en' or 'de'
         :return: prompt prefix as a string
@@ -73,17 +73,29 @@ def grading_prompt_prefix(lang, shots=[], stack_figures=False):
             raise RuntimeError(f"No prompt for lang {lang}")
 
         for shot in shots:
+            if with_ref:
+                ref_bounds = f"[correct_answer]\n{shot['CorrectAnswer']}\n[/correct_answer] \n"
+            else:
+                ref_bounds = ""
             shot_message = shot_message + f"{input_w}:\n" \
                                           f"[question]\n{shot['Question']}\n[/question] \n" \
                                           f"[answer]\n{shot['Answer']}\n[/answer] \n" \
+                                          f"{ref_bounds}" \
                                           f"[max_score] {shot['MaxScore']} [/max_score] \n" \
                                           f"{output_w}:\n" \
                                           f"[grade] {shot['GoldGrade']} [/grade]\n\n"
 
     if lang == 'en':
-        prompt = f"You are a university professor. Please grade the following exam question. The exam question, answer and the maximum possible score are provided in the format:\n" \
+        if with_ref:
+            ref_bounds = f"[correct_answer] <correct_answer> [/correct_answer] \n"
+            input_ls = "exam question, examinee's answer, correct answer and the maximum possible score"
+        else:
+            ref_bounds = ""
+            input_ls = "exam question, answer and the maximum possible score"
+        prompt = f"You are a university professor. Please grade the following exam question. The {input_ls} are provided in the format:\n" \
                  f"[question] <exam_question> [/question] \n" \
                  f"[answer] <answer> [/answer] \n" \
+                 f"{ref_bounds}" \
                  f"[max_score] <max_score> [/max_score] \n" \
                  f"The question is provided in JSON format, but the answer can be freeform text. The provided figures in the question (if any) each contains its path at the bottom, which matches the path provided in the JSON. {extra_message}The answer is text-only. If the question asks to draw on the figure, then the answer should contain text description on how the drawing should be." \
                  f"Please provide the grade between [0, <max_score>]. Please provide the reasoning for your grade. Please provide your output in the format: \n" \
@@ -92,16 +104,23 @@ def grading_prompt_prefix(lang, shots=[], stack_figures=False):
                  f"{shot_message}" \
                  f"Here is your input: \n"
     elif lang == 'de':
-        prompt = f"Sie sind Universitätsprofessor. Bitte bewerten Sie die folgende Prüfungsfrage. Die Prüfungsfrage, die Antwort und die maximal mögliche Punktzahl werden im Format bereitgestellt:\n" \
-                  f"[question] <Prüfungsfrage> [/question] \n" \
-                  f"[answer] <Antwort> [/answer] \n" \
-                  f"[max_score] <maxPunkt> [/max_score] \n" \
-                  f"Die Frage wird im JSON-Format bereitgestellt, die Antwort kann jedoch Freiformtext sein. Die bereitgestellten Abbildungen in der Frage (falls vorhanden) enthalten jeweils unten ihren Pfad, der mit dem im JSON bereitgestellten Pfad übereinstimmt. {extra_message}Die Antwort ist nur Text. Wenn es sich bei der Frage darum handelt, auf der Abbildung zu zeichnen, sollte die Antwort eine Textbeschreibung darüber enthalten, wie die Zeichnung aussehen soll." \
-                  f"Bitte geben Sie die Note zwischen [0, <maxPunkt>] an. Bitte begründen Sie Ihre Note. Bitte geben Sie Ihre Ausgabe im Format an: \n" \
-                  f"[reason] <Grundsatz> [/reason] \n" \
-                  f"[grade] <Note> [/grade] \n" \
-                  f"{shot_message}" \
-                  f"Hier ist Ihre Eingabe: \n"
+        if with_ref:
+            ref_bounds = f"[correct_answer] <korrekteAntwort> [/correct_answer] \n"
+            input_ls = "Die Prüfungsfrage, die Antwort des Prüflings, die richtige Antwort und die maximal mögliche Punktzahl"
+        else:
+            ref_bounds = ""
+            input_ls = "Die Prüfungsfrage, die Antwort und die maximal mögliche Punktzahl"
+        prompt = f"Sie sind Universitätsprofessor. Bitte bewerten Sie die folgende Prüfungsfrage. {input_ls} werden im Format bereitgestellt:\n" \
+                 f"[question] <Prüfungsfrage> [/question] \n" \
+                 f"[answer] <Antwort> [/answer] \n" \
+                 f"{ref_bounds}" \
+                 f"[max_score] <maxPunkt> [/max_score] \n" \
+                 f"Die Frage wird im JSON-Format bereitgestellt, die Antwort kann jedoch Freiformtext sein. Die bereitgestellten Abbildungen in der Frage (falls vorhanden) enthalten jeweils unten ihren Pfad, der mit dem im JSON bereitgestellten Pfad übereinstimmt. {extra_message}Die Antwort ist nur Text. Wenn es sich bei der Frage darum handelt, auf der Abbildung zu zeichnen, sollte die Antwort eine Textbeschreibung darüber enthalten, wie die Zeichnung aussehen soll." \
+                 f"Bitte geben Sie die Note zwischen [0, <maxPunkt>] an. Bitte begründen Sie Ihre Note. Bitte geben Sie Ihre Ausgabe im Format an: \n" \
+                 f"[reason] <Grundsatz> [/reason] \n" \
+                 f"[grade] <Note> [/grade] \n" \
+                 f"{shot_message}" \
+                 f"Hier ist Ihre Eingabe: \n"
     else:
         raise RuntimeError(f"No prompt for lang {lang}")
 

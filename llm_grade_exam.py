@@ -39,7 +39,12 @@ def main():
     else:
         raise RuntimeError(f"server_type {args.server_type} not implemented.")
 
-    out_dir = f"llm_grade/{exam_name}/grader_{args.llm_name}/{args.nr_shots}_shot"
+    if args.with_ref == 'no':
+        out_dir = f"llm_grade/{exam_name}/grader_{args.llm_name}/{args.nr_shots}_shot"
+    elif args.with_ref == 'yes':
+        out_dir = f"llm_grade/{exam_name}/grader_{args.llm_name}/{args.nr_shots}_shot_with_ref"
+    else:
+        raise RuntimeError(f"Invalid value for --with-ref")
     if args.nr_shots > 0:
         out_dir = f"{out_dir}/{args.shot_type}_shot"
     os.makedirs(out_dir, exist_ok=True)
@@ -114,16 +119,21 @@ def main():
                 shots = [{
                     "Question": json.dumps(remove_key(shot_exam['Questions'][shot_questions_id[i]], "Index")),
                     "Answer": extract_answer(shot_exam['Questions'][shot_questions_id[i]]['Index'], shot_llm_answers[i]),
+                    "CorrectAnswer": return_gold_answer(shot_additional_info['Questions'][shot_questions_id[i]], lang) if args.with_ref == "yes" else None,
                     "MaxScore": float(str(shot_additional_info["Questions"][shot_questions_id[i]]["MaximumPoints"]).replace(',', '.')),
                     "GoldGrade": shot_human_grades[i]['Questions'][shot_questions_id[i]]['Points']
                 } for i in range(args.nr_shots)]
 
             max_score = float(str(additional_info["Questions"][q]["MaximumPoints"]).replace(',', '.'))
-            prompt = grading_prompt_prefix(lang=lang, shots=shots)
+            prompt = grading_prompt_prefix(lang=lang, shots=shots, with_ref=True if args.with_ref == "yes" else False)
             question_text = json.dumps(question)
             answer_text = extract_answer(question_id, exam_answer)
+            correct_answer_prompt = \
+                f"[correct_answer]\n{return_gold_answer(additional_info['Questions'][q], lang)}\n[/correct_answer] \n" \
+                if args.with_ref == "yes" else ""
             input_body = f"[question]\n{question_text}\n[/question] \n" \
                          f"[answer]\n{answer_text}\n[/answer] \n" \
+                         f"{correct_answer_prompt}" \
                          f"[max_score] {max_score} [/max_score] \n"
 
             out = llm_client.send_request(
@@ -171,6 +181,32 @@ def load_human_grades(exam_name, lang, llm):
         print(f"Human grade file not available at {exam_name}, {lang}, {llm}")
         exit()
     return data
+
+
+def return_gold_answer(question, lang):
+    if lang == 'en':
+        same_lang_answer = question['GoldAnswerEnglish'] if not is_none(question['GoldAnswerEnglish']) else None
+        diff_lang_answer = question['GoldAnswerGerman'] if not is_none(question['GoldAnswerGerman']) else None
+    elif lang == 'de':
+        same_lang_answer = question['GoldAnswerGerman'] if not is_none(question['GoldAnswerGerman']) else None
+        diff_lang_answer = question['GoldAnswerEnglish'] if not is_none(question['GoldAnswerEnglish']) else None
+    else:
+        raise RuntimeError(f"Invalid lang `{lang}`")
+
+    if same_lang_answer is not None:
+        return '\n\n'.join(same_lang_answer) if isinstance(same_lang_answer, list) else same_lang_answer
+    elif diff_lang_answer is not None:
+        print(f"Warning: gold answer is not in the same language as the exam.")
+        return '\n\n'.join(diff_lang_answer) if isinstance(diff_lang_answer, list) else diff_lang_answer
+    else:
+        print(f"Gold answer not available.")
+        exit()
+
+
+def is_none(x):
+    if (x is None) or (isinstance(x, str) and x.lower() == "none"):
+        return True
+    return False
 
 
 if __name__ == "__main__":
