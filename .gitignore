@@ -34,3 +34,15 @@ __pycache__/*
 
 # Ignore macOS stuff
 .DS_Store
+
+
+# Ignore analysis files
+collect_stat.py
+collect_stats.sh
+fix_extracting_grade.py
+tmp.sh
+tmp.txt
+tmp_count_tokens.py
+
+# Ignore zip files
+*.tar.gz
