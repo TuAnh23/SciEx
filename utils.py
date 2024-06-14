@@ -315,7 +315,7 @@ def extract_answer(question_id, answer):
 
 
 def parse_grade(llm_out, max_score):
-    grade_regex = r"\[grade\]\s*(\d+(?:[.,]\d+)?)\s*\[/grade\]"
+    grade_regex = r"\[grade\]\s*(\d+(?:[.,]\d+)?)"
     matches = re.findall(grade_regex, llm_out)
     grade = parse_matched_float(matches, max_score)
     if grade is not None:
