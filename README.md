@@ -4,6 +4,8 @@ This repository contains the script to create SciEx and perform automatic evalua
 
 The SciEx dataset can be found [here](https://huggingface.co/datasets/tuanh23/SciEx).
 
+Our paper, containing details about the dataset and analysis, can be found [here](https://arxiv.org/pdf/2406.10421).
+
 # Leaderboard
 
 | No. | LLM     | Solve-Exam Performance* (Expert graded)  | Solve-Exam Performance* (GPT-4V graded) | Grade-Exam Performance** |
