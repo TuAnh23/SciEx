@@ -43,6 +43,7 @@ fix_extracting_grade.py
 tmp.sh
 tmp.txt
 tmp_count_tokens.py
+remove_student_grades.*
 
 # Ignore zip files
 *.tar.gz

@@ -56,7 +56,7 @@ def main():
         if args.nr_shots == 0:
             shot_llms, shot_exam_name = None, None
         else:
-            shot_llms = [x for x in range(len(LLM_LIST)) if x != llm_id]
+            shot_llms = [x for x in range(len(LLM_LIST[:7])) if x != llm_id] # select from the first 6 LLMs that have grading, and exclude the LLM in consideration
             shot_llms = random.sample(shot_llms, k=args.nr_shots)
             shot_llms = [map_index_to_llm(x) for x in shot_llms]
 

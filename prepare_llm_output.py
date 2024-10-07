@@ -2,7 +2,7 @@ import argparse
 import os
 import shutil
 
-from utils import map_llm_to_index
+from utils import map_llm_to_index, LLM_LIST
 
 
 def main():
@@ -16,7 +16,7 @@ def main():
     out_dir = f"llm_out_filtered/{exam_name}"
     os.makedirs(out_dir, exist_ok=True)
 
-    for llm in ['llava', 'mistral', 'mixtral', 'qwen', 'claude', 'gpt35', 'gpt4v']:
+    for llm in LLM_LIST:
         original_output_file = f"llm_out/{exam_name}/{exam_name_lang}_{llm}.txt"
         filtered_output_file = f"llm_out_filtered/{exam_name}/{exam_name_lang}_{map_llm_to_index(llm)}.txt"
 

@@ -1,5 +1,6 @@
 import argparse
 import os
+from utils import LLM_LIST
 
 from utils import load_json, dump_json, map_llm_to_index
 
@@ -25,7 +26,7 @@ def main():
     out_dir = f"human_feedback_template/{exam_name}/grades"
     os.makedirs(out_dir, exist_ok=True)
 
-    for llm in ['llava', 'mistral', 'mixtral', 'qwen', 'claude', 'gpt35', 'gpt4v']:
+    for llm in LLM_LIST:
         filename = args.json_path.split('/')[-1].replace('.json', f'_{map_llm_to_index(llm)}_grade.json')
         dump_json(out_template, f"{out_dir}/{filename}")
 
